@@ -1,0 +1,7 @@
+
+logging:
+  level:
+    com.example.blog: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.data.mongodb: DEBUG

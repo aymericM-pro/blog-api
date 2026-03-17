@@ -1,0 +1,9 @@
+spring:
+  data:
+    mongodb:
+      database: blog_test
+
+app:
+  jwt:
+    secret: test-secret-key-for-unit-tests-only-must-be-long-enough
+    expiration: 3600000

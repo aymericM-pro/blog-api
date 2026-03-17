@@ -1,0 +1,38 @@
+services:
+  mongo:
+    image: mongo:8
+    container_name: blog_mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: blog_user
+      MONGO_INITDB_ROOT_PASSWORD: blog_pass
+      MONGO_INITDB_DATABASE: blog_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blog_app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATA_MONGODB_URI: mongodb://blog_user:blog_pass@mongo:27017/blog_db?authSource=admin
+      SPRING_DATA_MONGODB_DATABASE: blog_db
+      APP_JWT_SECRET: changeme-this-is-a-very-long-secret-key-for-hs256-at-least-256-bits
+      APP_JWT_EXPIRATION: 86400000
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  mongo_data:
