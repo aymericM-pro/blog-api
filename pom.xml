@@ -24,6 +24,7 @@
         <jjwt.version>0.12.6</jjwt.version>
         <flapdoodle.version>4.18.0</flapdoodle.version>
         <slugify.version>3.0.6</slugify.version>
+        <gcs.version>2.40.1</gcs.version>
     </properties>
 
     <dependencies>
@@ -84,6 +85,13 @@
             <groupId>com.github.slugify</groupId>
             <artifactId>slugify</artifactId>
             <version>${slugify.version}</version>
+        </dependency>
+
+        <!-- Google Cloud Storage -->
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+            <version>${gcs.version}</version>
         </dependency>
 
         <!-- SpringDoc OpenAPI -->

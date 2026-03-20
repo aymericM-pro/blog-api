@@ -11,6 +11,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.List;
 
@@ -72,6 +73,15 @@ public class GlobalExceptionHandler {
 
         ErrorResponse body = ErrorResponse.of(2001, "Invalid credentials", 401, request.getRequestURI());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSize(
+            MaxUploadSizeExceededException ex, HttpServletRequest request) {
+
+        log.warn("[413] {} {} → file too large", request.getMethod(), request.getRequestURI());
+        ErrorResponse body = ErrorResponse.of(5003, "File exceeds maximum allowed size (5 MB)", 413, request.getRequestURI());
+        return ResponseEntity.status(413).body(body);
     }
 
     @ExceptionHandler(Exception.class)

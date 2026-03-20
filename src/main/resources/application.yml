@@ -1,11 +1,19 @@
 spring:
   application:
     name: blog
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 
 app:
   jwt:
     secret: changeme-this-is-a-very-long-secret-key-for-hs256-at-least-256-bits
     expiration: 86400000 # 24h en ms
+  gcs:
+    bucket-name: ${GCS_BUCKET_NAME:my-blog-bucket}
+    credentials-path: ${GCS_CREDENTIALS_PATH:}
+    public-url-prefix: https://storage.googleapis.com
 
 springdoc:
   api-docs:
