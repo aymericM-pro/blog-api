@@ -4,8 +4,6 @@ import com.example.blog.domain.Notification;
 import com.example.blog.enums.NotificationType;
 import com.example.blog.repository.NotificationRepository;
 import com.example.blog.service.NotificationService;
-import com.google.api.services.storage.Storage;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
-    private NotificationRepository notificationRepository;
+    private final NotificationRepository notificationRepository;
 
     @Override
     public Notification create(String userId, NotificationType type, String title, String message) {

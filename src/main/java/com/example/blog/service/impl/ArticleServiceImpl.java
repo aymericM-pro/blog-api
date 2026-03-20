@@ -7,6 +7,7 @@ import com.example.blog.dto.ArticleDtos.*;
 import com.example.blog.enums.ArticleCategory;
 import com.example.blog.enums.ArticleError;
 import com.example.blog.enums.AuthError;
+import com.example.blog.event.ArticlePublishedEvent;
 import com.example.blog.exception.BusinessException;
 import com.example.blog.mapper.ArticleMapper;
 import com.example.blog.mapper.UserMapper;
@@ -16,6 +17,8 @@ import com.example.blog.repository.UserRepository;
 import com.example.blog.service.ArticleService;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -28,6 +31,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ArticleServiceImpl implements ArticleService {
@@ -37,6 +41,8 @@ public class ArticleServiceImpl implements ArticleService {
     private final ArticleMapper articleMapper;
     private final UserMapper userMapper;
     private final AuthorRepository authorRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
     private final MongoTemplate mongoTemplate;
     private final Slugify slugify = Slugify.builder().build();
 
@@ -130,7 +136,16 @@ public class ArticleServiceImpl implements ArticleService {
             article.setPublishedAt(LocalDateTime.now());
         }
 
-        return toResponseWithBookmark(articleRepository.save(article), null);
+        Article saved = articleRepository.save(article);
+
+        if (saved.isPublished()) {
+            log.info("Article '{}' published, firing ArticlePublishedEvent (authorId={})", saved.getTitle(), saved.getAuthorId());
+            eventPublisher.publishEvent(new ArticlePublishedEvent(this, saved));
+        } else {
+            log.info("Article '{}' saved as draft, no event published", saved.getTitle());
+        }
+
+        return toResponseWithBookmark(saved, null);
     }
 
     // ─── UPDATE ──────────────────────────────────────────────────────────────

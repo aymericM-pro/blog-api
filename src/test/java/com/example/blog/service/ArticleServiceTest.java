@@ -22,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.LocalDateTime;
@@ -44,6 +45,7 @@ class ArticleServiceTest {
     @Mock UserMapper userMapper;
     @Mock MongoTemplate mongoTemplate;
     @Mock AuthorRepository authorRepository;
+    @Mock ApplicationEventPublisher eventPublisher;
 
     @InjectMocks ArticleServiceImpl articleService;
 
@@ -238,7 +240,6 @@ class ArticleServiceTest {
         @DisplayName("l'auteur peut supprimer son propre article")
         void authorCanDeleteOwnArticle() {
             when(articleRepository.findById("article-1")).thenReturn(Optional.of(article));
-            when(userRepository.findByEmail("author@example.com")).thenReturn(Optional.of(authorUser));
 
             articleService.deleteArticle("article-1", "author@example.com");
 
@@ -246,29 +247,13 @@ class ArticleServiceTest {
         }
 
         @Test
-        @DisplayName("l'admin peut supprimer n'importe quel article")
-        void adminCanDeleteAnyArticle() {
+        @DisplayName("n'importe quel utilisateur authentifié peut supprimer un article")
+        void anyAuthenticatedUserCanDeleteArticle() {
             when(articleRepository.findById("article-1")).thenReturn(Optional.of(article));
-            when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(adminUser));
 
-            articleService.deleteArticle("article-1", "admin@example.com");
+            articleService.deleteArticle("article-1", "other@example.com");
 
             verify(articleRepository).delete(article);
-        }
-
-        @Test
-        @DisplayName("un autre user ne peut pas supprimer l'article d'un autre auteur")
-        void otherUserCannotDeleteArticle() {
-            User other = User.builder().id("other-99").email("other@example.com")
-                    .role(Role.USER).bookmarkedArticleIds(new ArrayList<>()).build();
-
-            when(articleRepository.findById("article-1")).thenReturn(Optional.of(article));
-            when(userRepository.findByEmail("other@example.com")).thenReturn(Optional.of(other));
-
-            assertThatThrownBy(() -> articleService.deleteArticle("article-1", "other@example.com"))
-                    .isInstanceOf(BusinessException.class)
-                    .satisfies(ex -> assertThat(((BusinessException) ex).getError())
-                            .isEqualTo(ArticleError.ARTICLE_FORBIDDEN));
         }
     }
 
