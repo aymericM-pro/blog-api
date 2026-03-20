@@ -1,6 +1,11 @@
 package com.example.blog.config;
 
 import com.example.blog.security.JwtAuthenticationFilter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -22,7 +27,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
 import java.util.List;
 
 @Slf4j
@@ -71,9 +78,40 @@ public class SecurityConfig {
                         })
                 )
                 .authenticationProvider(authenticationProvider()) // ← AuthenticationProvider, pas Manager
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(sseTokenFilter(), JwtAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public OncePerRequestFilter sseTokenFilter() {
+        return new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(HttpServletRequest request,
+                                            HttpServletResponse response,
+                                            FilterChain filterChain)
+                    throws ServletException, IOException {
+
+                if (request.getRequestURI().contains("/notifications/stream")) {
+                    String token = request.getParameter("token");
+                    if (token != null) {
+                        HttpServletRequestWrapper wrapper = new HttpServletRequestWrapper(request) {
+                            @Override
+                            public String getHeader(String name) {
+                                if ("Authorization".equalsIgnoreCase(name)) {
+                                    return "Bearer " + token;
+                                }
+                                return super.getHeader(name);
+                            }
+                        };
+                        filterChain.doFilter(wrapper, response);
+                        return;
+                    }
+                }
+                filterChain.doFilter(request, response);
+            }
+        };
     }
 
     @Bean

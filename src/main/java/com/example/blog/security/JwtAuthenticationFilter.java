@@ -32,11 +32,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+        if ((authHeader == null || !authHeader.startsWith("Bearer "))
+                && request.getRequestURI().contains("/notifications/stream")) {
+            String tokenParam = request.getParameter("token");
+            if (tokenParam != null) {
+                authHeader = "Bearer " + tokenParam;
+            }
         }
 
         final String jwt = authHeader.substring(7);
