@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import java.security.Principal;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,14 +29,19 @@ public class AuthorControllerImpl implements AuthorController {
     }
 
     @Override
+    public ResponseEntity<AuthorResponse> getByUserId(String userId) {
+        return ResponseEntity.ok(authorService.findByUserId(userId));
+    }
+
+    @Override
     public ResponseEntity<AuthorResponse> create(AuthorRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(authorService.create(request));
     }
 
     @Override
-    public ResponseEntity<AuthorResponse> update(String id, AuthorRequest request) {
-        return ResponseEntity.ok(authorService.update(id, request));
+    public ResponseEntity<AuthorResponse> update(String id, AuthorRequest request, Principal principal) {
+        return ResponseEntity.ok(authorService.update(id, request, principal.getName()));
     }
 
     @Override

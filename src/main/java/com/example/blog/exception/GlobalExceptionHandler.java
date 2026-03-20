@@ -2,6 +2,7 @@ package com.example.blog.exception;
 
 import com.example.blog.enums.CommonError;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,12 +14,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(
             BusinessException ex, HttpServletRequest request) {
+
+        log.warn("[{}] {} {} → {}", ex.getError().getHttpStatus(), request.getMethod(), request.getRequestURI(), ex.getMessage());
 
         ErrorResponse body = ErrorResponse.of(
                 ex.getError().getCode(),
@@ -38,6 +42,8 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .toList();
 
+        log.warn("[400] {} {} → validation errors: {}", request.getMethod(), request.getRequestURI(), errors);
+
         ErrorResponse body = ErrorResponse.of(
                 CommonError.VALIDATION_ERROR.getCode(),
                 CommonError.VALIDATION_ERROR.getMessage(),
@@ -52,6 +58,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccessDenied(
             AccessDeniedException ex, HttpServletRequest request) {
 
+        log.warn("[403] {} {} → Access denied", request.getMethod(), request.getRequestURI());
+
         ErrorResponse body = ErrorResponse.of(2006, "Access denied", 403, request.getRequestURI());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
@@ -59,6 +67,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(
             BadCredentialsException ex, HttpServletRequest request) {
+
+        log.warn("[401] {} {} → Invalid credentials", request.getMethod(), request.getRequestURI());
 
         ErrorResponse body = ErrorResponse.of(2001, "Invalid credentials", 401, request.getRequestURI());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
@@ -68,7 +78,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGeneric(
             Exception ex, HttpServletRequest request) {
 
-        ex.printStackTrace();
+        log.error("[500] {} {} → {}", request.getMethod(), request.getRequestURI(), ex.getMessage(), ex);
 
         ErrorResponse body = ErrorResponse.of(
                 CommonError.INTERNAL_SERVER_ERROR.getCode(),

@@ -11,6 +11,7 @@ import com.example.blog.exception.BusinessException;
 import com.example.blog.mapper.ArticleMapper;
 import com.example.blog.mapper.UserMapper;
 import com.example.blog.repository.ArticleRepository;
+import com.example.blog.repository.AuthorRepository;
 import com.example.blog.repository.UserRepository;
 import com.example.blog.service.impl.ArticleServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +43,7 @@ class ArticleServiceTest {
     @Mock ArticleMapper articleMapper;
     @Mock UserMapper userMapper;
     @Mock MongoTemplate mongoTemplate;
+    @Mock AuthorRepository authorRepository;
 
     @InjectMocks ArticleServiceImpl articleService;
 
@@ -169,6 +171,10 @@ class ArticleServiceTest {
         void shouldCreateArticleWithSlugAndReadTime() {
             when(articleRepository.existsByTitle(anyString())).thenReturn(false);
             when(userRepository.findByEmail("author@example.com")).thenReturn(Optional.of(authorUser));
+            when(authorRepository.findByUserId("user-1")).thenReturn(Optional.empty());
+            when(authorRepository.save(any())).thenReturn(
+                    Author.builder().id("author-1").userId("user-1").name("John Doe").role("AUTHOR").build()
+            );
             when(articleRepository.existsBySlug(anyString())).thenReturn(false);
             when(articleMapper.toEntity(any())).thenReturn(article);
             when(userMapper.toAuthor(any())).thenReturn(Author.builder().id("user-1").build());
@@ -205,6 +211,10 @@ class ArticleServiceTest {
         void shouldGenerateSlugWithSuffixOnCollision() {
             when(articleRepository.existsByTitle(anyString())).thenReturn(false);
             when(userRepository.findByEmail("author@example.com")).thenReturn(Optional.of(authorUser));
+            when(authorRepository.findByUserId("user-1")).thenReturn(Optional.empty());
+            when(authorRepository.save(any())).thenReturn(
+                    Author.builder().id("author-1").userId("user-1").name("John Doe").role("AUTHOR").build()
+            );
             when(articleRepository.existsBySlug("new-article-title")).thenReturn(true);
             when(articleRepository.existsBySlug("new-article-title-2")).thenReturn(false);
             when(articleMapper.toEntity(any())).thenReturn(article);

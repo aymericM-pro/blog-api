@@ -7,7 +7,8 @@ public class AuthorsDtos {
     public record AuthorRequest(
             String name,
             String avatar,
-            String role
+            String role,
+            String description
     ) {}
 
     public record AuthorResponse(
@@ -15,6 +16,7 @@ public class AuthorsDtos {
             String name,
             String avatar,
             String role,
+            String description,
             String createdAt
     ) {
         public static AuthorResponse of(Author author) {
@@ -23,6 +25,7 @@ public class AuthorsDtos {
                     author.getName(),
                     author.getAvatar(),
                     author.getRole(),
+                    author.getDescription(),
                     author.getCreatedAt()
             );
         }

@@ -29,7 +29,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final UserDetailsService userDetailsService; // ← ajoute ça
+    private final UserDetailsService userDetailsService;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .name(request.name())
-                .role(Optional.ofNullable(request.role()).orElse(Role.USER))
+                .role(Optional.ofNullable(request.role()).orElse(Role.ADMIN))
                 .build();
 
         userRepository.save(user);
@@ -61,10 +61,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(AuthError.INVALID_CREDENTIALS);
         }
 
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessException(AuthError.USER_NOT_FOUND));
+        User user = userRepository.findByEmail(request.email()).orElseThrow(() -> new BusinessException(AuthError.USER_NOT_FOUND));
 
-        // ← idem pour le login
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtService.generateToken(userDetails);
         return AuthResponse.of(token, user);

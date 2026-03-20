@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.security.Principal;
 
 @Tag(name = "Authors", description = "Author endpoints")
 @RequestMapping("/api/v1/authors")
@@ -24,13 +24,17 @@ public interface AuthorController {
     @GetMapping("/{id}")
     ResponseEntity<AuthorResponse> getById(@PathVariable String id);
 
+    @Operation(summary = "Get author by user id")
+    @GetMapping("/user/{userId}")
+    ResponseEntity<AuthorResponse> getByUserId(@PathVariable String userId);
+
     @Operation(summary = "Create author")
     @PostMapping
     ResponseEntity<AuthorResponse> create(@Valid @RequestBody AuthorRequest request);
 
     @Operation(summary = "Update author")
-    @PutMapping("/{id}")
-    ResponseEntity<AuthorResponse> update(@PathVariable String id, @Valid @RequestBody AuthorRequest request);
+    @PatchMapping("/{id}")
+    ResponseEntity<AuthorResponse> update(@PathVariable String id, @Valid @RequestBody AuthorRequest request, Principal principal);
 
     @Operation(summary = "Delete author")
     @DeleteMapping("/{id}")

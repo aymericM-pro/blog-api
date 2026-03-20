@@ -2,6 +2,7 @@ package com.example.blog.config;
 
 import com.example.blog.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,6 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -39,17 +41,32 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/articles", "/api/v1/articles/**").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/articles").hasAnyRole("AUTHOR", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/articles").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/authors", "/api/v1/authors/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/articles/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/articles/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/articles/*/bookmark").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users", "/api/v1/users/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            log.warn("[401] {} {} → {}", request.getMethod(), request.getRequestURI(), authException.getMessage());
+                            response.sendError(401, "Unauthorized");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            log.warn("[403] {} {} → {}", request.getMethod(), request.getRequestURI(), accessDeniedException.getMessage());
+                            response.sendError(403, "Forbidden");
+                        })
                 )
                 .authenticationProvider(authenticationProvider()) // ← AuthenticationProvider, pas Manager
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -79,7 +96,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:5173"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

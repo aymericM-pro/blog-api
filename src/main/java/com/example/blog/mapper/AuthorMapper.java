@@ -27,6 +27,7 @@ public interface AuthorMapper {
     @Mapping(target = "name", source = "name")
     @Mapping(target = "avatar", source = "avatar")
     @Mapping(target = "role", source = "role")
+    @Mapping(target = "description", source = "description")
     void updateAuthorFromDto(AuthorRequest request, @MappingTarget Author author);
 
 }

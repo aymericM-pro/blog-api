@@ -7,11 +7,11 @@ import com.example.blog.dto.ArticleDtos.*;
 import com.example.blog.enums.ArticleCategory;
 import com.example.blog.enums.ArticleError;
 import com.example.blog.enums.AuthError;
-import com.example.blog.enums.Role;
 import com.example.blog.exception.BusinessException;
 import com.example.blog.mapper.ArticleMapper;
 import com.example.blog.mapper.UserMapper;
 import com.example.blog.repository.ArticleRepository;
+import com.example.blog.repository.AuthorRepository;
 import com.example.blog.repository.UserRepository;
 import com.example.blog.service.ArticleService;
 import com.github.slugify.Slugify;
@@ -36,6 +36,7 @@ public class ArticleServiceImpl implements ArticleService {
     private final UserRepository userRepository;
     private final ArticleMapper articleMapper;
     private final UserMapper userMapper;
+    private final AuthorRepository authorRepository;
     private final MongoTemplate mongoTemplate;
     private final Slugify slugify = Slugify.builder().build();
 
@@ -104,13 +105,25 @@ public class ArticleServiceImpl implements ArticleService {
             throw new BusinessException(ArticleError.ARTICLE_TITLE_ALREADY_EXISTS);
         }
 
-        User author = userRepository.findByEmail(authorEmail)
+        User user = userRepository.findByEmail(authorEmail)
                 .orElseThrow(() -> new BusinessException(AuthError.USER_NOT_FOUND));
+
+        Author author = authorRepository.findByUserId(user.getId())
+                .orElseGet(() -> authorRepository.save(
+                        Author.builder()
+                                .userId(user.getId())
+                                .name(user.getName())
+                                .avatar(user.getAvatar())
+                                .role(user.getRole().name())
+                                .build()
+                ));
+
+
 
         Article article = articleMapper.toEntity(request);
         article.setSlug(generateUniqueSlug(request.title()));
         article.setAuthorId(author.getId());
-        article.setAuthor(userMapper.toAuthor(author));
+        article.setAuthor(userMapper.toAuthor(user));
         article.setReadTime(calculateReadTime(request.content()));
 
         if (request.published()) {
@@ -127,8 +140,6 @@ public class ArticleServiceImpl implements ArticleService {
         Article article = findArticleById(id);
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new BusinessException(com.example.blog.enums.AuthError.USER_NOT_FOUND));
-
-        assertCanModify(article, currentUser);
 
         if (!article.getTitle().equals(request.title())
                 && articleRepository.existsByTitleAndIdNot(request.title(), id)) {
@@ -155,9 +166,6 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public void deleteArticle(String id, String currentUserEmail) {
         Article article = findArticleById(id);
-        User currentUser = userRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new BusinessException(AuthError.USER_NOT_FOUND));
-        assertCanModify(article, currentUser);
         articleRepository.delete(article);
     }
 
@@ -188,15 +196,6 @@ public class ArticleServiceImpl implements ArticleService {
     private Article findArticleById(String id) {
         return articleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ArticleError.ARTICLE_NOT_FOUND));
-    }
-
-    private void assertCanModify(Article article, User user) {
-        boolean isAdmin = user.getRole() == Role.ADMIN;
-        boolean isAuthor = article.getAuthorId() != null
-                && article.getAuthorId().equals(user.getId());
-        if (!isAdmin && !isAuthor) {
-            throw new BusinessException(ArticleError.ARTICLE_FORBIDDEN);
-        }
     }
 
     private String generateUniqueSlug(String title) {

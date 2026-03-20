@@ -19,10 +19,13 @@ public class Author {
     @Id
     private String id;
 
+    private String userId;
+
     @Indexed(unique = true)
     private String name;
     private String avatar;
     private String role;
+    private String description;
 
     @CreatedDate
     private String createdAt;
