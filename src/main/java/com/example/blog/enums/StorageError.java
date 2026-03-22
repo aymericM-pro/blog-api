@@ -3,7 +3,7 @@ package com.example.blog.enums;
 public enum StorageError implements BusinessError {
 
     EMPTY_FILE(5001, "File must not be empty", 400),
-    INVALID_FILE_TYPE(5002, "File type not allowed. Accepted: jpeg, png, webp, gif", 415),
+    INVALID_FILE_TYPE(5002, "File type not allowed. Accepted: jpeg, png, webp, gif, md", 415),
     FILE_TOO_LARGE(5003, "File exceeds maximum allowed size (5 MB)", 413),
     UPLOAD_FAILED(5004, "Failed to upload file to storage", 502),
     DELETE_FAILED(5005, "Failed to delete file from storage", 502),

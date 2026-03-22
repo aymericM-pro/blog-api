@@ -20,8 +20,7 @@ public class GcsConfig {
     public Storage googleCloudStorage(GcsProperties props) throws IOException {
         if (props.credentialsPath() != null && !props.credentialsPath().isBlank()) {
             log.info("GCS: using explicit service account credentials from {}", props.credentialsPath());
-            ServiceAccountCredentials credentials =
-                    ServiceAccountCredentials.fromStream(new FileInputStream(props.credentialsPath()));
+            ServiceAccountCredentials credentials = ServiceAccountCredentials.fromStream(new FileInputStream(props.credentialsPath()));
             return StorageOptions.newBuilder()
                     .setCredentials(credentials)
                     .build()

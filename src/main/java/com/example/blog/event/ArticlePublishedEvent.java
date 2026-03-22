@@ -4,8 +4,6 @@ import com.example.blog.domain.Article;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
-import java.time.Clock;
-
 @Getter
 public class ArticlePublishedEvent extends ApplicationEvent
 {

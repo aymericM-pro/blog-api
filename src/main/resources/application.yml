@@ -11,8 +11,8 @@ app:
     secret: changeme-this-is-a-very-long-secret-key-for-hs256-at-least-256-bits
     expiration: 86400000 # 24h en ms
   gcs:
-    bucket-name: ${GCS_BUCKET_NAME:my-blog-bucket}
-    credentials-path: ${GCS_CREDENTIALS_PATH:}
+    bucket-name: ${GCS_BUCKET_NAME:blog_app_back}
+    credentials-path: ${GCS_CREDENTIALS_PATH:google_auth.json}
     public-url-prefix: https://storage.googleapis.com
 
 springdoc:

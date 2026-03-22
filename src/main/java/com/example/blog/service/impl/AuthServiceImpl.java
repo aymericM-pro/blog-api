@@ -6,11 +6,13 @@ import com.example.blog.dto.AuthDtos.LoginRequest;
 import com.example.blog.dto.AuthDtos.RegisterRequest;
 import com.example.blog.enums.AuthError;
 import com.example.blog.enums.Role;
+import com.example.blog.event.UserRegisteredEvent;
 import com.example.blog.exception.BusinessException;
 import com.example.blog.repository.UserRepository;
 import com.example.blog.security.JwtService;
 import com.example.blog.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,6 +32,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -44,11 +47,13 @@ public class AuthServiceImpl implements AuthService {
                 .role(Optional.ofNullable(request.role()).orElse(Role.ADMIN))
                 .build();
 
-        userRepository.save(user);
+        User saved = userRepository.save(user);
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        eventPublisher.publishEvent(new UserRegisteredEvent(this, saved));
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(saved.getEmail());
         String token = jwtService.generateToken(userDetails);
-        return AuthResponse.of(token, user);
+        return AuthResponse.of(token, saved);
     }
 
     @Override

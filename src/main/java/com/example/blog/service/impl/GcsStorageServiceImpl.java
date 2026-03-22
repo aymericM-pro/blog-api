@@ -4,6 +4,8 @@ import com.example.blog.config.GcsProperties;
 import com.example.blog.enums.StorageError;
 import com.example.blog.exception.BusinessException;
 import com.example.blog.service.StorageService;
+import com.example.blog.dto.StorageDtos.FileResponse;
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
@@ -14,6 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -23,7 +28,8 @@ import java.util.UUID;
 public class GcsStorageServiceImpl implements StorageService {
 
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
-            "image/jpeg", "image/png", "image/webp", "image/gif"
+            "image/jpeg", "image/png", "image/webp", "image/gif",
+            "text/markdown", "text/x-markdown", "text/plain"
     );
     private static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024;
 
@@ -74,6 +80,33 @@ public class GcsStorageServiceImpl implements StorageService {
         }
     }
 
+    @Override
+    public List<FileResponse> list(String folder) {
+        String prefix = Optional.ofNullable(folder)
+                .filter(f -> !f.isBlank())
+                .map(f -> f.strip() + "/")
+                .orElse("");
+
+        List<FileResponse> files = new ArrayList<>();
+        Iterable<Blob> blobs = storage.list(
+                gcsProperties.bucketName(),
+                Storage.BlobListOption.prefix(prefix)
+        ).iterateAll();
+
+        for (Blob blob : blobs) {
+            if (blob.getName().endsWith("/")) continue; // skip folder pseudo-objects
+            files.add(new FileResponse(
+                    blob.getName(),
+                    buildPublicUrl(blob.getName()),
+                    blob.getSize(),
+                    blob.getContentType()
+            ));
+        }
+
+        log.info("GCS list: {} object(s) found under prefix '{}'", files.size(), prefix);
+        return files;
+    }
+
     // ─── helpers ──────────────────────────────────────────────────────────────
 
     private void validateFile(MultipartFile file) {
@@ -90,14 +123,20 @@ public class GcsStorageServiceImpl implements StorageService {
     }
 
     private String extractExtension(String filename) {
-        if (filename == null || !filename.contains(".")) return "jpg";
-        return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+        return Optional.ofNullable(filename)
+                .filter(f -> f.contains("."))
+                .map(f -> f.substring(f.lastIndexOf('.') + 1).toLowerCase())
+                .orElse("jpg");
     }
 
     private String buildObjectName(String folder, String extension) {
-        String prefix = (folder != null && !folder.isBlank()) ? folder.strip() + "/" : "";
+        String prefix = Optional.ofNullable(folder)
+                .filter(f -> !f.isBlank())
+                .map(f -> f.strip() + "/")
+                .orElse("");
         return prefix + UUID.randomUUID() + "." + extension;
     }
+
 
     private String buildPublicUrl(String objectName) {
         return gcsProperties.publicUrlPrefix()

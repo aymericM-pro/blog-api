@@ -31,3 +31,7 @@ logs/
 ### Env ###
 .env
 *.env.local
+
+### GCP credentials ###
+google_auth.json
+*-credentials.json
