@@ -1,14 +1,17 @@
 package com.example.blog.controller;
 
 import com.example.blog.dto.StorageDtos.FileResponse;
+import com.example.blog.dto.StorageDtos.MarkdownToPdfRequest;
 import com.example.blog.dto.StorageDtos.UploadResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -39,5 +42,15 @@ public interface StorageController {
     @GetMapping("/files")
     ResponseEntity<List<FileResponse>> listFiles(
             @RequestParam(value = "folder", required = false, defaultValue = "") String folder
+    );
+
+    @Operation(
+            summary = "Convert Markdown to PDF and upload to GCS",
+            description = "Renders the Markdown content as a styled PDF, stores it in GCS and returns the public URL.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PostMapping("/markdown-to-pdf")
+    ResponseEntity<UploadResponse> markdownToPdf(
+            @Valid @RequestBody MarkdownToPdfRequest request
     );
 }

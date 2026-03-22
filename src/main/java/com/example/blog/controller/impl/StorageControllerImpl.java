@@ -2,7 +2,9 @@ package com.example.blog.controller.impl;
 
 import com.example.blog.controller.StorageController;
 import com.example.blog.dto.StorageDtos.FileResponse;
+import com.example.blog.dto.StorageDtos.MarkdownToPdfRequest;
 import com.example.blog.dto.StorageDtos.UploadResponse;
+import com.example.blog.service.MarkdownPdfService;
 import com.example.blog.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import java.util.List;
 public class StorageControllerImpl implements StorageController {
 
     private final StorageService storageService;
+    private final MarkdownPdfService markdownPdfService;
 
     @Override
     public ResponseEntity<UploadResponse> upload(MultipartFile file, String folder) {
@@ -26,5 +29,11 @@ public class StorageControllerImpl implements StorageController {
     @Override
     public ResponseEntity<List<FileResponse>> listFiles(String folder) {
         return ResponseEntity.ok(storageService.list(folder));
+    }
+
+    @Override
+    public ResponseEntity<UploadResponse> markdownToPdf(MarkdownToPdfRequest request) {
+        String url = markdownPdfService.convertAndUpload(request.url(), request.filename());
+        return ResponseEntity.ok(new UploadResponse(url));
     }
 }

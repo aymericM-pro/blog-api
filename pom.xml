@@ -25,6 +25,8 @@
         <flapdoodle.version>4.18.0</flapdoodle.version>
         <slugify.version>3.0.6</slugify.version>
         <gcs.version>2.40.1</gcs.version>
+        <commonmark.version>0.22.0</commonmark.version>
+        <openhtmltopdf.version>1.0.10</openhtmltopdf.version>
     </properties>
 
     <dependencies>
@@ -92,6 +94,18 @@
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
             <version>${gcs.version}</version>
+        </dependency>
+
+        <!-- Markdown → PDF -->
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark</artifactId>
+            <version>${commonmark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.openhtmltopdf</groupId>
+            <artifactId>openhtmltopdf-pdfbox</artifactId>
+            <version>${openhtmltopdf.version}</version>
         </dependency>
 
         <!-- SpringDoc OpenAPI -->

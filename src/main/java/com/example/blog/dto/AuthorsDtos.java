@@ -2,13 +2,21 @@ package com.example.blog.dto;
 
 import com.example.blog.domain.Author;
 
+import java.util.List;
+
 public class AuthorsDtos {
 
     public record AuthorRequest(
             String name,
             String avatar,
             String role,
-            String description
+            String description,
+            String location,
+            String website,
+            String twitter,
+            String github,
+            String linkedin,
+            List<String> skills
     ) {}
 
     public record AuthorResponse(
@@ -17,6 +25,12 @@ public class AuthorsDtos {
             String avatar,
             String role,
             String description,
+            String location,
+            String website,
+            String twitter,
+            String github,
+            String linkedin,
+            List<String> skills,
             String createdAt
     ) {
         public static AuthorResponse of(Author author) {
@@ -26,6 +40,12 @@ public class AuthorsDtos {
                     author.getAvatar(),
                     author.getRole(),
                     author.getDescription(),
+                    author.getLocation(),
+                    author.getWebsite(),
+                    author.getTwitter(),
+                    author.getGithub(),
+                    author.getLinkedin(),
+                    author.getSkills(),
                     author.getCreatedAt()
             );
         }

@@ -28,6 +28,12 @@ public interface AuthorMapper {
     @Mapping(target = "avatar", source = "avatar")
     @Mapping(target = "role", source = "role")
     @Mapping(target = "description", source = "description")
+    @Mapping(target = "location", source = "location")
+    @Mapping(target = "website", source = "website")
+    @Mapping(target = "twitter", source = "twitter")
+    @Mapping(target = "github", source = "github")
+    @Mapping(target = "linkedin", source = "linkedin")
+    @Mapping(target = "skills", source = "skills")
     void updateAuthorFromDto(AuthorRequest request, @MappingTarget Author author);
 
 }
